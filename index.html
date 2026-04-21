@@ -4,6 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Симулятор Скотобазинкова: Полная Сага</title>
+
+    <meta property="og:title" content="Симулятор Скотобазинкова: Полная Сага">
+    <meta property="og:description" content="Пройди 6 стадий жизни Сергея: от искренних стараний до абсолютной лени на диване. Собери Мега ПК, построй Академию и выживи в прокуратуре.">
+    <meta property="og:image" content="https://starsclub1999.github.io/Serega-tycoon/AerKQg41OSo.jpg">
+    <meta property="og:url" content="https://starsclub1999.github.io/Serega-tycoon/">
+    <meta property="og:type" content="website">
+    
+    <meta name="theme-color" content="#ffb703">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Симулятор Скотобазинкова">
+    <meta name="twitter:description" content="Интерактивная история падения великого контент-мейкера.">
+    <meta name="twitter:image" content="https://starsclub1999.github.io/Serega-tycoon/AerKQg41OSo.jpg">
+
     <style>
         :root {
             --bg-color: #121214; --panel-bg: #1e1e24; --text-main: #e0e0e0;
@@ -25,7 +39,6 @@
         .start-btn:hover { filter: brightness(1.1); }
         .container { display: flex; width: 100%; height: 100%; position: relative; }
         
-        /* ПАНЕЛЬ СОХРАНЕНИЙ */
         .save-panel {
             position: absolute; top: 10px; right: 10px; display: flex; gap: 8px; z-index: 100;
         }
@@ -94,13 +107,12 @@
 
 <div id="end-overlay">
     <h1 style="color: var(--accent); font-size: 4rem;">АБСОЛЮТНАЯ ЛЕНЬ</h1>
-    <p style="font-size: 1.5rem; max-width: 600px; color: #ccc;">Академия удалена. Сохранения стерты. ПК сломан ногой. Вы забанили самого себя и остались лежать на бязи навсегда.</p>
+    <p style="font-size: 1.5rem; max-width: 600px; color: #ccc;">Академия удалена. Сохранения стерты. ПК сломан ногой. Вы забанили самого себя и остались лежать на диване навсегда.</p>
     <h2 style="color: var(--danger);">КОНЕЦ ИГРЫ</h2>
     <button class="start-btn" onclick="resetGame()" style="font-size: 1.2rem; margin-top:30px;">Начать цикл заново</button>
 </div>
 
 <div class="container">
-    
     <div class="save-panel">
         <button class="save-btn" onclick="exportSave()">💾 Скачать файл</button>
         <button class="save-btn" onclick="document.getElementById('import-file').click()">📂 Загрузить файл</button>
@@ -109,12 +121,8 @@
     </div>
 
     <div class="left-panel" id="left-panel">
-        <div class="stats-area" id="stats-area-container">
-            </div>
-        
-        <div class="clicker-area" id="clicker-container">
-            </div>
-        
+        <div class="stats-area" id="stats-area-container"></div>
+        <div class="clicker-area" id="clicker-container"></div>
         <div class="chat-area" id="chat-panel"></div>
     </div>
     
@@ -127,7 +135,6 @@
 </div>
 
 <script>
-    // --- ДАННЫЕ СТАДИЙ ---
     const gameStages = [
         {
             name: "Стадия 1: Искренние старания",
@@ -135,13 +142,13 @@
             btnText: "ДЕЛАТЬ<br>КОНТЕНТ",
             btnColor: "#4cc9f0",
             currency: "просмотров",
-            logs: ["Смонтировал ролик до 4 утра. Горжусь результатом.", "Записал звук без единой запинки.", "Кто-то написал добрый коммент. Приятно!", "Рисую обложку для видео уже третий час."],
+            logs: ["Смонтировал ролик до 4 утра. Горжусь результатом.", "Записал звук без запинки.", "Кто-то написал добрый коммент. Приятно!", "Рисую обложку для видео уже третий час."],
             upgrades: [
                 { name: 'Микрофон с поп-фильтром', cost: 15, cps: 1, desc: 'Чтобы звук был приятным для зрителей.' },
                 { name: 'Лицензионный редактор', cost: 100, cps: 5, desc: 'Куплен на последние деньги ради качества.' },
                 { name: 'Авторское превью', cost: 400, cps: 20, desc: 'Старательно нарисовано в фотошопе.' },
                 { name: 'Ответы подписчикам', cost: 1500, cps: 60, desc: 'Искреннее общение со своей аудиторией.' },
-                { name: 'Регулярные стримы', cost: 5000, cps: 200, desc: 'Соблюдаю расписание, даже если устал.' },
+                { name: 'Регулярные видео', cost: 5000, cps: 200, desc: 'Соблюдаю расписание, даже если устал.' },
                 { name: 'Реклама War Thunder', cost: 15000, cps: 500, desc: 'Очень забавная и креативная интеграция!' },
                 { name: 'Сложный монтаж', cost: 45000, cps: 1500, desc: 'Потратил неделю, но видео получилось шикарным.' },
                 { name: 'Совместный стрим', cost: 120000, cps: 4000, desc: 'Играем с друзьями, веселим аудиторию.' },
@@ -184,7 +191,7 @@
                 { name: 'Выдать админку Певвко', cost: 20000, cps: 1000, desc: 'Фатальная ошибка.' },
                 { name: 'Бан-хаммер Певвко', cost: 80000, cps: 4000, desc: 'Диктатура началась.' },
                 { name: 'Первая революция', cost: 300000, cps: 15000, desc: 'Подписчики бунтуют из-за массовых банов.' },
-                { name: 'Лежать на бязи', cost: 1000000, cps: 45000, desc: 'Игнорировать бунт на сервере.' },
+                { name: 'Лежать на диване', cost: 1000000, cps: 45000, desc: 'Игнорировать бунт на сервере.' },
                 { name: 'Выгнать Певвко на балкон', cost: 4000000, cps: 120000, desc: 'Временное решение проблемы с диктатором.' },
                 { name: 'Уйти в Прокуратуру', cost: 20000000, cps: 0, desc: '[ПЕРЕХОД] Деньги кончились, нужна реальная работа.', isTransition: true }
             ]
@@ -217,7 +224,7 @@
             currency: "смертей",
             logs: ["Лия задонатил на усложнение челленджа.", "Асфальтная стена нанесла фатальный урон.", "Мама несет тарелку с дюбелями."],
             upgrades: [
-                { name: 'Принять вызов Лии', cost: 50, cps: 5, desc: 'Топ-донатер подкидывает испытание.' },
+                { name: 'Принять вызов Лии', cost: 50, cps: 5, desc: 'Тот самый челлендж за донат.' },
                 { name: 'Класс: Призыватель', cost: 400, cps: 30, desc: 'Самый хрупкий класс.' },
                 { name: 'Умереть от слизня', cost: 2500, cps: 150, desc: 'Позор в самом начале.' },
                 { name: 'Асфальтные дороги', cost: 12000, cps: 800, desc: 'Зачем-то построил стены на арене.' },
@@ -245,334 +252,174 @@
                 { name: 'Делегировать удаление ИИ', cost: 2000000, cps: 200000, desc: 'Даже рушить всё лень самому.' },
                 { name: 'Стереть лор канала', cost: 15000000, cps: 1000000, desc: 'Безжалостное удаление истории Академии.' },
                 { name: 'Нажать кнопку Delete', cost: 100000000, cps: 8000000, desc: 'Точка невозврата пройдена.' },
-                { name: 'Уснуть навсегда', cost: 800000000, cps: 50000000, desc: 'Вечный сон на бязи.' },
+                { name: 'Уснуть навсегда', cost: 800000000, cps: 50000000, desc: 'Вечный сон на диване.' },
                 { name: 'ЗАБАНИТЬ СЕБЯ (КОНЕЦ)', cost: 5000000000, cps: 0, desc: 'Случайный клик. Финал игры.', isTransition: true }
             ]
         }
     ];
 
-    let currentStageIndex = 0;
-    let currentStage = null;
-    let score = 0;
-    let baseCps = 0;
-    let globalMultiplier = 1; 
-    let gameInterval;
-    let audioCtx;
-    let isAudioPlaying = false;
+    let currentStageIndex = 0, score = 0, baseCps = 0, globalMultiplier = 1, audioCtx, isAudioPlaying = false, gameInterval;
 
-    // Проверка наличия сохранений при загрузке
     window.onload = function() {
-        if (localStorage.getItem('seregaSave')) {
-            document.getElementById('continue-btn').style.display = 'inline-block';
-        }
-    }
+        if (localStorage.getItem('seregaSave')) document.getElementById('continue-btn').style.display = 'inline-block';
+    };
 
-    // --- СИСТЕМА СОХРАНЕНИЙ ---
     function getSaveObj() {
         return {
-            currentStageIndex: currentStageIndex,
-            score: score,
-            globalMultiplier: globalMultiplier,
+            currentStageIndex, score, globalMultiplier,
             upgrades: gameStages.map(stage => stage.upgrades.map(u => u.count || 0))
         };
     }
 
     function saveGameLocal() {
-        try {
-            localStorage.setItem('seregaSave', JSON.stringify(getSaveObj()));
-        } catch(e) { console.warn("Не удалось сохранить игру локально", e); }
+        try { localStorage.setItem('seregaSave', JSON.stringify(getSaveObj())); } catch(e) { console.warn("Save failed", e); }
     }
 
     function applySave(data) {
         currentStageIndex = data.currentStageIndex || 0;
         score = data.score || 0;
         globalMultiplier = data.globalMultiplier || 1;
-        
-        if (data.upgrades && data.upgrades.length === gameStages.length) {
-            gameStages.forEach((stage, i) => {
-                stage.upgrades.forEach((u, j) => {
-                    u.count = data.upgrades[i][j] || 0;
-                });
+        if (data.upgrades) {
+            data.upgrades.forEach((stageUpgrades, i) => {
+                if (gameStages[i]) stageUpgrades.forEach((count, j) => { if (gameStages[i].upgrades[j]) gameStages[i].upgrades[j].count = count; });
             });
         }
-        
         setupStageUI(currentStageIndex);
         calculateCPS();
         renderUpgrades();
         updateUI();
-        addLog(`Игра успешно загружена. Эпоха: ${currentStage.name}`, 'system');
-        
-        // Если была 6 стадия и игра пройдена
-        if (currentStageIndex === 5 && score >= gameStages[5].upgrades[9].cost) {
-            // Теоретически игра окончена
-        }
+        addLog(`Игра загружена. Эпоха: ${currentStage.name}`, 'system');
     }
 
     function exportSave() {
-        const saveStr = JSON.stringify(getSaveObj());
-        const blob = new Blob([saveStr], {type: "application/json"});
-        const url = URL.createObjectURL(blob);
+        const blob = new Blob([JSON.stringify(getSaveObj())], {type: "application/json"});
         const a = document.createElement('a');
-        a.href = url;
-        a.download = `serega_save_epoch_${currentStageIndex + 1}.json`;
-        document.body.appendChild(a);
+        a.href = URL.createObjectURL(blob);
+        a.download = `serega_save_${currentStageIndex + 1}.json`;
         a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        addLog('Файл сохранения успешно скачан.', 'system');
+        addLog('Файл сохранения скачан.', 'system');
     }
 
     function importSave(event) {
-        const file = event.target.files[0];
-        if (!file) return;
         const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const data = JSON.parse(e.target.result);
-                applySave(data);
-            } catch(err) {
-                alert("Ошибка чтения файла! Возможно, файл поврежден.");
-            }
-        };
-        reader.readAsText(file);
-        event.target.value = ''; // сброс инпута
+        reader.onload = e => { try { applySave(JSON.parse(e.target.result)); } catch(err) { alert("Ошибка файла!"); } };
+        reader.readAsText(event.target.files[0]);
     }
 
-    function resetGame() {
-        if (confirm("Вы уверены, что хотите удалить сохранение и начать путь с чистого листа?")) {
-            localStorage.removeItem('seregaSave');
-            location.reload();
-        }
-    }
+    function resetGame() { if (confirm("Начать заново?")) { localStorage.removeItem('seregaSave'); location.reload(); } }
 
-    // --- ЗВУК ---
     function initAudio() {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (audioCtx.state === 'suspended') audioCtx.resume();
     }
 
     function playBGM() {
-        if (isAudioPlaying) return;
-        isAudioPlaying = true;
-        const notes = [220.00, 261.63, 329.63, 293.66]; 
-        let noteIndex = 0;
-
+        if (isAudioPlaying) return; isAudioPlaying = true;
+        const notes = [220.00, 261.63, 329.63, 293.66]; let ni = 0;
         setInterval(() => {
             if(!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'triangle'; 
-            osc.frequency.setValueAtTime(notes[noteIndex], audioCtx.currentTime);
-            gain.gain.setValueAtTime(0, audioCtx.currentTime);
-            gain.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 0.5);
-            gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 2.0);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 2.0);
-            noteIndex = (noteIndex + 1) % notes.length;
-        }, 2000); 
+            const osc = audioCtx.createOscillator(), g = audioCtx.createGain();
+            osc.type = 'triangle'; osc.frequency.setValueAtTime(notes[ni], audioCtx.currentTime);
+            g.gain.setValueAtTime(0, audioCtx.currentTime);
+            g.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 0.5);
+            g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 2.0);
+            osc.connect(g); g.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 2.0);
+            ni = (ni + 1) % notes.length;
+        }, 2000);
     }
 
     function playClickSound() {
         if(!audioCtx) return;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(100 + (currentStageIndex * 50), audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.1);
-        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-        osc.connect(gain); gain.connect(audioCtx.destination);
+        const osc = audioCtx.createOscillator(), g = audioCtx.createGain();
+        osc.type = 'square'; osc.frequency.setValueAtTime(100 + (currentStageIndex * 50), audioCtx.currentTime);
+        g.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        osc.connect(g); g.connect(audioCtx.destination);
         osc.start(); osc.stop(audioCtx.currentTime + 0.1);
     }
 
-    function playTransitionSound() {
-        if(!audioCtx) return;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(50, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.8, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 3);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(); osc.stop(audioCtx.currentTime + 3);
-    }
-
-    // --- ЛОГИКА ИГРЫ ---
     function addLog(text, type = 'normal') {
-        const logPanel = document.getElementById('chat-panel');
-        const entry = document.createElement('div');
+        const logPanel = document.getElementById('chat-panel'), entry = document.createElement('div');
         entry.className = `chat-entry ${type}`;
-        entry.innerText = (type === 'system' || type === 'transition' ? "[СИСТЕМА] " : "> ") + text;
+        entry.innerText = (type.includes('system') ? "[СИСТЕМА] " : "> ") + text;
         logPanel.appendChild(entry);
         if (logPanel.children.length > 7) logPanel.removeChild(logPanel.firstChild);
         logPanel.scrollTop = logPanel.scrollHeight;
     }
 
-    function startGame(loadLocal = false) {
+    function startGame(loadLocal) {
         document.getElementById('start-overlay').style.display = 'none';
-        initAudio();
-        playBGM(); 
-        
-        if (loadLocal && localStorage.getItem('seregaSave')) {
-            const data = JSON.parse(localStorage.getItem('seregaSave'));
-            applySave(data);
-        } else {
-            loadStage(0);
-        }
-        
+        initAudio(); playBGM();
+        if (loadLocal && localStorage.getItem('seregaSave')) applySave(JSON.parse(localStorage.getItem('seregaSave')));
+        else loadStage(0);
         gameInterval = setInterval(gameLoop, 100);
-        
-        // Случайные логи
-        setInterval(() => {
-            if (currentStage && currentStage.logs.length > 0) {
-                const msg = currentStage.logs[Math.floor(Math.random() * currentStage.logs.length)];
-                addLog(msg);
-            }
-        }, 8000);
-
-        // Автосохранение каждые 30 сек
-        setInterval(() => {
-            saveGameLocal();
-            addLog('Автосохранение выполнено.', 'system');
-        }, 30000);
+        setInterval(() => { if (currentStage) addLog(currentStage.logs[Math.floor(Math.random() * currentStage.logs.length)]); }, 8000);
+        setInterval(() => { saveGameLocal(); addLog('Автосохранение.', 'system'); }, 30000);
     }
 
     function setupStageUI(index) {
-        currentStageIndex = index;
-        currentStage = gameStages[index];
-
-        const statsContainer = document.getElementById('stats-area-container');
-        statsContainer.innerHTML = `
-            <h2 id="stage-name" style="color: var(--stage-color);">${currentStage.name}</h2>
+        currentStageIndex = index; currentStage = gameStages[index];
+        document.getElementById('stats-area-container').innerHTML = `
+            <h2 id="stage-name" style="color:var(--stage-color);">${currentStage.name}</h2>
             <h1 id="score">0</h1>
             <p id="cps">0 <span id="currency-name">${currentStage.currency}</span>/сек</p>
-            <p style="color: var(--success); font-size: 1rem; margin-top:10px;">Множитель эпохи: x<span id="mult-val">${globalMultiplier}</span></p>
+            <p style="color:var(--success);">Множитель: x<span id="mult-val">${globalMultiplier}</span></p>
         `;
-
-        const clickerContainer = document.getElementById('clicker-container');
-        clickerContainer.innerHTML = `
-            <div id="clicker-btn" onclick="clickMain()" style="background-color: ${currentStage.btnColor};">
-                <span id="btn-text-span">${currentStage.btnText}</span>
-            </div>
-        `;
-
-        const upgradesHeader = document.getElementById('upgrades-header-container');
-        upgradesHeader.innerHTML = `<h2 id="upgrades-title">${currentStage.uiTitle}</h2>`;
-
+        document.getElementById('clicker-container').innerHTML = `<div id="clicker-btn" onclick="clickMain()" style="background-color:${currentStage.btnColor};"><span id="btn-text-span">${currentStage.btnText}</span></div>`;
+        document.getElementById('upgrades-header-container').innerHTML = `<h2 id="upgrades-title">${currentStage.uiTitle}</h2>`;
         document.getElementById('left-panel').style.borderRightColor = currentStage.btnColor;
     }
 
     function loadStage(index) {
-        score = 0;
-        baseCps = 0;
+        score = 0; baseCps = 0;
         gameStages[index].upgrades.forEach(u => u.count = 0);
-        
         setupStageUI(index);
-        addLog(`Началась эпоха: ${currentStage.name}`, 'system');
-        renderUpgrades();
-        updateUI();
-        saveGameLocal(); // Сохраняем прогресс сразу при смене стадии
+        addLog(`Эпоха: ${currentStage.name}`, 'system');
+        renderUpgrades(); updateUI(); saveGameLocal();
     }
 
-    function clickMain() {
-        let clickVal = (currentStageIndex + 1) * 2;
-        score += clickVal * globalMultiplier;
-        playClickSound();
-        updateUI();
-    }
-
-    function getCost(upgrade) {
-        return Math.floor(upgrade.cost * Math.pow(1.15, upgrade.count || 0));
-    }
+    function clickMain() { score += (currentStageIndex + 1) * 2 * globalMultiplier; playClickSound(); updateUI(); }
 
     function buyUpgrade(idx) {
-        const upg = currentStage.upgrades[idx];
-        const cost = getCost(upg);
-        
+        const u = currentStage.upgrades[idx], cost = Math.floor(u.cost * Math.pow(1.15, u.count || 0));
         if (score >= cost) {
             score -= cost;
-            if (upg.isTransition) {
-                playTransitionSound();
-                addLog(`ЗАВЕРШЕНО: ${upg.name}`, 'transition');
-                
-                if (currentStageIndex === 5) {
-                    clearInterval(gameInterval);
-                    setTimeout(() => {
-                        document.getElementById('end-overlay').style.display = 'flex';
-                    }, 1000);
-                } else {
-                    globalMultiplier += 1; 
-                    setTimeout(() => loadStage(currentStageIndex + 1), 500);
-                }
+            if (u.isTransition) {
+                if (currentStageIndex === 5) { clearInterval(gameInterval); document.getElementById('end-overlay').style.display = 'flex'; }
+                else { globalMultiplier++; setTimeout(() => loadStage(currentStageIndex + 1), 500); }
             } else {
-                upg.count = (upg.count || 0) + 1;
-                addLog(`Приобретено: ${upg.name}`);
-                calculateCPS();
-                renderUpgrades();
-                updateUI();
+                u.count = (u.count || 0) + 1; addLog(`Куплено: ${u.name}`);
+                calculateCPS(); renderUpgrades(); updateUI();
             }
         }
     }
 
-    function calculateCPS() {
-        baseCps = 0;
-        currentStage.upgrades.forEach(u => {
-            if (!u.isTransition) baseCps += u.cps * (u.count || 0);
-        });
-    }
-
-    function gameLoop() {
-        if (baseCps > 0) {
-            score += (baseCps * globalMultiplier) / 10;
-        }
-        updateUI();
-    }
+    function calculateCPS() { baseCps = 0; currentStage.upgrades.forEach(u => { if (!u.isTransition) baseCps += u.cps * (u.count || 0); }); }
+    function gameLoop() { if (baseCps > 0) score += (baseCps * globalMultiplier) / 10; updateUI(); }
 
     function updateUI() {
-        const scoreEl = document.getElementById('score');
-        const cpsEl = document.getElementById('cps');
-        if (scoreEl) scoreEl.innerText = Math.floor(score).toLocaleString('ru-RU');
-        if (cpsEl) cpsEl.innerText = `${Math.floor(baseCps * globalMultiplier).toLocaleString('ru-RU')} ${currentStage.currency}/сек`;
-        
-        currentStage.upgrades.forEach((u, idx) => {
-            const el = document.getElementById(`upg-${idx}`);
+        document.getElementById('score').innerText = Math.floor(score).toLocaleString('ru-RU');
+        document.getElementById('cps').innerText = `${Math.floor(baseCps * globalMultiplier).toLocaleString('ru-RU')} ${currentStage.currency}/сек`;
+        currentStage.upgrades.forEach((u, i) => {
+            const el = document.getElementById(`upg-${i}`);
             if (el) {
-                const cost = getCost(u);
-                const costEl = el.querySelector('.cost-val');
-                if (costEl) costEl.innerText = cost.toLocaleString('ru-RU');
-                
-                if (score >= cost) el.classList.remove('disabled');
-                else el.classList.add('disabled');
+                const cost = Math.floor(u.cost * Math.pow(1.15, u.count || 0));
+                el.querySelector('.cost-val').innerText = cost.toLocaleString('ru-RU');
+                if (score >= cost) el.classList.remove('disabled'); else el.classList.add('disabled');
             }
         });
     }
 
     function renderUpgrades() {
-        const container = document.getElementById('upgrades-container');
-        container.innerHTML = '';
-        currentStage.upgrades.forEach((u, idx) => {
-            const cost = getCost(u);
+        const cont = document.getElementById('upgrades-container'); cont.innerHTML = '';
+        currentStage.upgrades.forEach((u, i) => {
+            const cost = Math.floor(u.cost * Math.pow(1.15, u.count || 0));
             const div = document.createElement('div');
             div.className = `upgrade-card disabled ${u.isTransition ? 'transition-btn' : ''}`;
-            div.id = `upg-${idx}`;
-            div.onclick = () => buyUpgrade(idx);
-            
-            const countStr = u.isTransition ? '' : ` (x${u.count || 0})`;
-            const cpsStr = u.isTransition ? 'КЛЮЧ К СЛЕДУЮЩЕЙ СТАДИИ' : `+${(u.cps * globalMultiplier).toLocaleString('ru-RU')} / сек`;
-            
-            div.innerHTML = `
-                <div class="upgrade-info">
-                    <h3 style="color: ${u.isTransition ? 'var(--danger)' : '#fff'}">${u.name}${countStr}</h3>
-                    <p>${u.desc}</p>
-                    <p style="color:#aaa; font-size:0.8rem; margin-top:5px;">${cpsStr}</p>
-                </div>
-                <div class="upgrade-cost">
-                    <span><span class="cost-val">${cost.toLocaleString('ru-RU')}</span></span>
-                </div>
-            `;
-            container.appendChild(div);
+            div.id = `upg-${i}`; div.onclick = () => buyUpgrade(i);
+            div.innerHTML = `<div class="upgrade-info"><h3>${u.name}${u.isTransition?'':' (x'+(u.count||0)+')'}</h3><p>${u.desc}</p><p style="color:#aaa;font-size:0.8rem;margin-top:5px;">${u.isTransition?'КЛЮЧ':'+'+(u.cps*globalMultiplier).toLocaleString()+'/сек'}</p></div><div class="upgrade-cost"><span><span class="cost-val">${cost.toLocaleString()}</span></span></div>`;
+            cont.appendChild(div);
         });
     }
 </script>
