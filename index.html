@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Симулятор Скотобазинкова: Полная Сага</title>
+    <style>
+        :root {
+            --bg-color: #121214; --panel-bg: #1e1e24; --text-main: #e0e0e0;
+            --accent: #ffb703; --danger: #ef233c; --success: #06d6a0; --stage-color: #4cc9f0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color); color: var(--text-main); margin: 0; display: flex; height: 100vh; overflow: hidden; user-select: none;
+        }
+        #start-overlay, #end-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.95); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 1000; text-align: center;
+        }
+        #end-overlay { display: none; background: rgba(150, 0, 0, 0.95); }
+        .start-btn {
+            padding: 20px 40px; font-size: 24px; background: var(--accent); border: none; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 20px;
+        }
+        .start-btn:hover { filter: brightness(1.1); }
+        .container { display: flex; width: 100%; height: 100%; position: relative; }
+        
+        /* ПАНЕЛЬ СОХРАНЕНИЙ */
+        .save-panel {
+            position: absolute; top: 10px; right: 10px; display: flex; gap: 8px; z-index: 100;
+        }
+        .save-btn {
+            background: #2a2a35; color: #fff; border: 1px solid #444; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 0.85rem; transition: background 0.2s;
+        }
+        .save-btn:hover { background: #3a3a48; }
+
+        .left-panel {
+            flex: 1.2; display: flex; flex-direction: column; border-right: 2px solid #333; background: radial-gradient(circle, #2a2a35 0%, #121214 80%); transition: background 0.5s;
+        }
+        .stats-area { padding: 20px; text-align: center; }
+        .stats-area h2 { margin: 0; color: var(--stage-color); font-size: 1.4rem; text-transform: uppercase; letter-spacing: 1px;}
+        .stats-area h1 { margin: 10px 0; font-size: 3.5rem; color: var(--accent); transition: color 0.3s;}
+        .stats-area p { margin: 5px 0; font-size: 1.2rem; opacity: 0.8; }
+        
+        .clicker-area { flex: 1; display: flex; align-items: center; justify-content: center; }
+        #clicker-btn {
+            width: 280px; height: 280px; background: #8d99ae; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 1.8rem;
+            color: #1a1a1d; font-weight: bold; cursor: pointer; text-align: center; line-height: 1.3;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6), inset 0 -10px 20px rgba(0,0,0,0.3);
+            border: 12px solid #edf2f4; transition: transform 0.05s, background-color 0.5s;
+        }
+        #clicker-btn:active { transform: scale(0.92); }
+        
+        .chat-area {
+            height: 180px; background: #0a0a0c; padding: 15px; overflow-y: hidden;
+            border-top: 3px solid #333; font-family: monospace; font-size: 0.95rem; color: #0f0;
+            display: flex; flex-direction: column; justify-content: flex-end; box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
+        }
+        .chat-entry { margin: 3px 0; animation: fadein 0.3s; }
+        .chat-entry.system { color: #f0f; font-weight: bold; }
+        .chat-entry.transition { color: #ffeb3b; font-weight: bold; text-shadow: 0 0 5px #ffeb3b; }
+        
+        .right-panel { flex: 1; display: flex; flex-direction: column; background-color: var(--panel-bg); position: relative;}
+        .upgrades-header { padding: 20px; background: #1a1a1d; text-align: center; border-bottom: 2px solid #333; margin-top: 40px; }
+        .upgrades-container { flex: 1; overflow-y: auto; padding: 20px; }
+        
+        .upgrade-card {
+            background: #2a2a35; border-radius: 8px; padding: 15px; margin-bottom: 12px;
+            display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+            border-left: 5px solid var(--accent); transition: transform 0.1s;
+        }
+        .upgrade-card:hover:not(.disabled) { transform: translateX(-5px); background: #3a3a48; }
+        .upgrade-card.disabled { opacity: 0.4; cursor: not-allowed; filter: grayscale(100%); }
+        .upgrade-card.transition-btn { border-left: 5px solid var(--danger); background: #3d1c1d; }
+        .upgrade-card.transition-btn:hover:not(.disabled) { background: #5a1e20; }
+        
+        .upgrade-info h3 { margin: 0 0 5px 0; font-size: 1.1rem; }
+        .upgrade-info p { margin: 0; font-size: 0.85rem; opacity: 0.8; }
+        .upgrade-cost { text-align: right; min-width: 90px; }
+        .upgrade-cost span { display: block; font-size: 1.2rem; font-weight: bold; color: var(--accent); }
+        
+        @keyframes fadein { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+    </style>
+</head>
+<body>
+
+<div id="start-overlay">
+    <h1 style="color: var(--accent); font-size: 3rem; margin-bottom: 10px;">Эпохи Скотобазинкова</h1>
+    <p style="font-size: 1.2rem; max-width: 600px; color: #ccc;">Пройди 6 стадий жизни. При переходе в новую эпоху весь прогресс обнуляется, но множитель лени растет на +1x.</p>
+    <button class="start-btn" onclick="startGame(false)">Новая игра</button>
+    <button class="start-btn" id="continue-btn" onclick="startGame(true)" style="display:none; background: #06d6a0; margin-left: 15px;">Продолжить игру</button>
+</div>
+
+<div id="end-overlay">
+    <h1 style="color: var(--accent); font-size: 4rem;">АБСОЛЮТНАЯ ЛЕНЬ</h1>
+    <p style="font-size: 1.5rem; max-width: 600px; color: #ccc;">Академия удалена. Сохранения стерты. ПК сломан ногой. Вы забанили самого себя и остались лежать на бязи навсегда.</p>
+    <h2 style="color: var(--danger);">КОНЕЦ ИГРЫ</h2>
+    <button class="start-btn" onclick="resetGame()" style="font-size: 1.2rem; margin-top:30px;">Начать цикл заново</button>
+</div>
+
+<div class="container">
+    
+    <div class="save-panel">
+        <button class="save-btn" onclick="exportSave()">💾 Скачать файл</button>
+        <button class="save-btn" onclick="document.getElementById('import-file').click()">📂 Загрузить файл</button>
+        <input type="file" id="import-file" style="display:none" accept=".json" onchange="importSave(event)">
+        <button class="save-btn" style="color: #ff4d4d; border-color:#ff4d4d;" onclick="resetGame()">🗑 Сброс</button>
+    </div>
+
+    <div class="left-panel" id="left-panel">
+        <div class="stats-area" id="stats-area-container">
+            </div>
+        
+        <div class="clicker-area" id="clicker-container">
+            </div>
+        
+        <div class="chat-area" id="chat-panel"></div>
+    </div>
+    
+    <div class="right-panel">
+        <div class="upgrades-header" id="upgrades-header-container">
+            <h2 id="upgrades-title">Улучшения</h2>
+        </div>
+        <div class="upgrades-container" id="upgrades-container"></div>
+    </div>
+</div>
+
+<script>
+    // --- ДАННЫЕ СТАДИЙ ---
+    const gameStages = [
+        {
+            name: "Стадия 1: Искренние старания",
+            uiTitle: "Студия Контента",
+            btnText: "ДЕЛАТЬ<br>КОНТЕНТ",
+            btnColor: "#4cc9f0",
+            currency: "просмотров",
+            logs: ["Смонтировал ролик до 4 утра. Горжусь результатом.", "Записал звук без единой запинки.", "Кто-то написал добрый коммент. Приятно!", "Рисую обложку для видео уже третий час."],
+            upgrades: [
+                { name: 'Микрофон с поп-фильтром', cost: 15, cps: 1, desc: 'Чтобы звук был приятным для зрителей.' },
+                { name: 'Лицензионный редактор', cost: 100, cps: 5, desc: 'Куплен на последние деньги ради качества.' },
+                { name: 'Авторское превью', cost: 400, cps: 20, desc: 'Старательно нарисовано в фотошопе.' },
+                { name: 'Ответы подписчикам', cost: 1500, cps: 60, desc: 'Искреннее общение со своей аудиторией.' },
+                { name: 'Регулярные стримы', cost: 5000, cps: 200, desc: 'Соблюдаю расписание, даже если устал.' },
+                { name: 'Реклама War Thunder', cost: 15000, cps: 500, desc: 'Очень забавная и креативная интеграция!' },
+                { name: 'Сложный монтаж', cost: 45000, cps: 1500, desc: 'Потратил неделю, но видео получилось шикарным.' },
+                { name: 'Совместный стрим', cost: 120000, cps: 4000, desc: 'Играем с друзьями, веселим аудиторию.' },
+                { name: 'Хорошая вебкамера', cost: 400000, cps: 12000, desc: 'Теперь зрители видят мои искренние эмоции.' },
+                { name: 'Собрать Мега ПК', cost: 2000000, cps: 0, desc: '[ПЕРЕХОД] Нужно мощное железо для новых шедевров.', isTransition: true }
+            ]
+        },
+        {
+            name: "Стадия 2: ПК Курильщика",
+            uiTitle: "Сборка железа",
+            btnText: "БИТЬ<br>НОГОЙ",
+            btnColor: "#f77f00",
+            currency: "градусов",
+            logs: ["Материнская плата стоит дороже, чем весь остальной ПК.", "Вентиляторы воют как турбины самолета.", "Ударил ногой по системнику. Стрим резко оборвался.", "Фортнайт больше не запускается. Диск мёртв."],
+            upgrades: [
+                { name: 'Термопаста за 50р', cost: 20, cps: 2, desc: 'Засохла ещё в магазине.' },
+                { name: 'DeepCool GAMMAXX 200', cost: 150, cps: 10, desc: 'Пытается остудить этот адский котел.' },
+                { name: 'Корпус из холодильника', cost: 800, cps: 40, desc: 'Он вообще БЕЗ ВДУВА воздуха. Гениально.' },
+                { name: 'Топовая ASUS Z170', cost: 3500, cps: 150, desc: 'Самая дорогая деталь в ПК. Гордость сборки.' },
+                { name: 'БП KCAS', cost: 12000, cps: 500, desc: 'Светошумовая граната замедленного действия.' },
+                { name: 'Кипящий i7-7700k', cost: 40000, cps: 1800, desc: 'Температура ядра стабильно 110 градусов.' },
+                { name: 'MSI Armor 1080ti', cost: 150000, cps: 6000, desc: 'Тот самый легендарный кипятильник.' },
+                { name: 'Удар ногой по ПК', cost: 500000, cps: 20000, desc: 'Психанул из-за шума вентиляторов. Конец стрима.' },
+                { name: 'Отвал шпинделя диска', cost: 1500000, cps: 50000, desc: 'Трагедия. Полная утрата доступа в Фортнайт.' },
+                { name: 'Создать Академию', cost: 10000000, cps: 0, desc: '[ПЕРЕХОД] Комп сломан, уходим править Дискордом.', isTransition: true }
+            ]
+        },
+        {
+            name: "Стадия 3: Создание Академии",
+            uiTitle: "Серверный Дискорд",
+            btnText: "ОТЧИТЫВАТЬ<br>ШКОЛЬНИКОВ",
+            btnColor: "#06d6a0",
+            currency: "школьников",
+            logs: ["Ксириус плачет о лоре.", "Школьники шумят в голосовом чате.", "В чате замечена Эдмундовщина!"],
+            upgrades: [
+                { name: 'Летсплей по Террарии', cost: 30, cps: 3, desc: 'Собираем молодую аудиторию.' },
+                { name: 'Собрать школьников', cost: 200, cps: 15, desc: 'Массовка для сервера.' },
+                { name: 'Отжать сервер у Ксириуса', cost: 1000, cps: 60, desc: 'Тихий захват власти.' },
+                { name: 'Охота на Эдмундовщину', cost: 5000, cps: 250, desc: 'Паранойя заставляет банить всех подряд.' },
+                { name: 'Выдать админку Певвко', cost: 20000, cps: 1000, desc: 'Фатальная ошибка.' },
+                { name: 'Бан-хаммер Певвко', cost: 80000, cps: 4000, desc: 'Диктатура началась.' },
+                { name: 'Первая революция', cost: 300000, cps: 15000, desc: 'Подписчики бунтуют из-за массовых банов.' },
+                { name: 'Лежать на бязи', cost: 1000000, cps: 45000, desc: 'Игнорировать бунт на сервере.' },
+                { name: 'Выгнать Певвко на балкон', cost: 4000000, cps: 120000, desc: 'Временное решение проблемы с диктатором.' },
+                { name: 'Уйти в Прокуратуру', cost: 20000000, cps: 0, desc: '[ПЕРЕХОД] Деньги кончились, нужна реальная работа.', isTransition: true }
+            ]
+        },
+        {
+            name: "Стадия 4: Прокуратура",
+            uiTitle: "Отдел кадров",
+            btnText: "ОТВЕЧАТЬ<br>НА ЗВОНКИ",
+            btnColor: "#7209b7",
+            currency: "выговоров",
+            logs: ["Бабка кричит в трубку: ВЫ МОШЕННИК!", "Злая женщина смотрит с презрением.", "Вкусное мороженое немного скрасило день."],
+            upgrades: [
+                { name: 'Поднять трубку', cost: 40, cps: 4, desc: 'На том конце провода кричат бабки.' },
+                { name: 'Сделать вид работы', cost: 300, cps: 20, desc: 'Имитация бурной деятельности.' },
+                { name: 'Бесплатное мороженое', cost: 1500, cps: 100, desc: 'Очень вкусное! Единственный плюс этой работы.' },
+                { name: 'Крик бабки: МОШЕННИК!', cost: 8000, cps: 400, desc: 'Психика разрушается с каждым звонком.' },
+                { name: 'Косой взгляд начальницы', cost: 35000, cps: 1800, desc: 'Злая женщина уже близко.' },
+                { name: 'Прятаться в туалете', cost: 150000, cps: 8000, desc: 'Чтобы не получить новые задачи.' },
+                { name: 'Лишение премии', cost: 600000, cps: 30000, desc: 'Денег нет, но вы держитесь.' },
+                { name: 'Скандал со Злой Женщиной', cost: 2500000, cps: 100000, desc: 'Она кричит и обижает тебя.' },
+                { name: 'Увольнение', cost: 8000000, cps: 350000, desc: 'Свобода... но есть снова нечего.' },
+                { name: 'Челлендж Лии', cost: 50000000, cps: 0, desc: '[ПЕРЕХОД] Топ-донатер бросает сложный вызов.', isTransition: true }
+            ]
+        },
+        {
+            name: "Стадия 5: Челлендж Лии",
+            uiTitle: "Master Mode",
+            btnText: "КАЗУАЛЬНО<br>УМИРАТЬ",
+            btnColor: "#ef476f",
+            currency: "смертей",
+            logs: ["Лия задонатил на усложнение челленджа.", "Асфальтная стена нанесла фатальный урон.", "Мама несет тарелку с дюбелями."],
+            upgrades: [
+                { name: 'Принять вызов Лии', cost: 50, cps: 5, desc: 'Топ-донатер подкидывает испытание.' },
+                { name: 'Класс: Призыватель', cost: 400, cps: 30, desc: 'Самый хрупкий класс.' },
+                { name: 'Умереть от слизня', cost: 2500, cps: 150, desc: 'Позор в самом начале.' },
+                { name: 'Асфальтные дороги', cost: 12000, cps: 800, desc: 'Зачем-то построил стены на арене.' },
+                { name: 'Врезаться в стену', cost: 50000, cps: 3000, desc: 'Тупейшая смерть на боссе.' },
+                { name: 'Маунт Слизень в эндгейме', cost: 250000, cps: 15000, desc: 'Худшая тактика из возможных.' },
+                { name: 'Жесткий бомбеж', cost: 1000000, cps: 60000, desc: 'Ударил по столу из-за очередной смерти.' },
+                { name: 'Ужин дюбелями', cost: 4000000, cps: 200000, desc: 'Родители кормят металлом за провал челленджа.' },
+                { name: 'Мама кричит: СПАТЬ!', cost: 15000000, cps: 800000, desc: 'Время позднее, нужно вырубать игру.' },
+                { name: 'Стереть сохранение', cost: 100000000, cps: 0, desc: '[ПЕРЕХОД] Случайно нажал удалить. Конец контента.', isTransition: true }
+            ]
+        },
+        {
+            name: "Стадия 6: Финал (Удаление)",
+            uiTitle: "Кнопка Детонатора",
+            btnText: "ЛЕНИВО<br>СОПЕТЬ",
+            btnColor: "#495057",
+            currency: "очков лени",
+            logs: ["Тебе лень даже дышать.", "Дискорд медленно умирает.", "Ксириус навсегда покинул чат."],
+            upgrades: [
+                { name: 'Лежать неподвижно', cost: 100, cps: 10, desc: 'Даже кликать лень.' },
+                { name: 'Не менять штаны неделю', cost: 1000, cps: 100, desc: 'Высшая форма апатии.' },
+                { name: 'Смотреть в пустую стену', cost: 8000, cps: 800, desc: 'Депрессия менеджера среднего звена.' },
+                { name: 'Съесть последний дюбель', cost: 50000, cps: 5000, desc: 'Больше нет сил готовить.' },
+                { name: 'Игнорировать чат', cost: 300000, cps: 30000, desc: 'Пусть сервер горит.' },
+                { name: 'Делегировать удаление ИИ', cost: 2000000, cps: 200000, desc: 'Даже рушить всё лень самому.' },
+                { name: 'Стереть лор канала', cost: 15000000, cps: 1000000, desc: 'Безжалостное удаление истории Академии.' },
+                { name: 'Нажать кнопку Delete', cost: 100000000, cps: 8000000, desc: 'Точка невозврата пройдена.' },
+                { name: 'Уснуть навсегда', cost: 800000000, cps: 50000000, desc: 'Вечный сон на бязи.' },
+                { name: 'ЗАБАНИТЬ СЕБЯ (КОНЕЦ)', cost: 5000000000, cps: 0, desc: 'Случайный клик. Финал игры.', isTransition: true }
+            ]
+        }
+    ];
+
+    let currentStageIndex = 0;
+    let currentStage = null;
+    let score = 0;
+    let baseCps = 0;
+    let globalMultiplier = 1; 
+    let gameInterval;
+    let audioCtx;
+    let isAudioPlaying = false;
+
+    // Проверка наличия сохранений при загрузке
+    window.onload = function() {
+        if (localStorage.getItem('seregaSave')) {
+            document.getElementById('continue-btn').style.display = 'inline-block';
+        }
+    }
+
+    // --- СИСТЕМА СОХРАНЕНИЙ ---
+    function getSaveObj() {
+        return {
+            currentStageIndex: currentStageIndex,
+            score: score,
+            globalMultiplier: globalMultiplier,
+            upgrades: gameStages.map(stage => stage.upgrades.map(u => u.count || 0))
+        };
+    }
+
+    function saveGameLocal() {
+        try {
+            localStorage.setItem('seregaSave', JSON.stringify(getSaveObj()));
+        } catch(e) { console.warn("Не удалось сохранить игру локально", e); }
+    }
+
+    function applySave(data) {
+        currentStageIndex = data.currentStageIndex || 0;
+        score = data.score || 0;
+        globalMultiplier = data.globalMultiplier || 1;
+        
+        if (data.upgrades && data.upgrades.length === gameStages.length) {
+            gameStages.forEach((stage, i) => {
+                stage.upgrades.forEach((u, j) => {
+                    u.count = data.upgrades[i][j] || 0;
+                });
+            });
+        }
+        
+        setupStageUI(currentStageIndex);
+        calculateCPS();
+        renderUpgrades();
+        updateUI();
+        addLog(`Игра успешно загружена. Эпоха: ${currentStage.name}`, 'system');
+        
+        // Если была 6 стадия и игра пройдена
+        if (currentStageIndex === 5 && score >= gameStages[5].upgrades[9].cost) {
+            // Теоретически игра окончена
+        }
+    }
+
+    function exportSave() {
+        const saveStr = JSON.stringify(getSaveObj());
+        const blob = new Blob([saveStr], {type: "application/json"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `serega_save_epoch_${currentStageIndex + 1}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        addLog('Файл сохранения успешно скачан.', 'system');
+    }
+
+    function importSave(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                applySave(data);
+            } catch(err) {
+                alert("Ошибка чтения файла! Возможно, файл поврежден.");
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = ''; // сброс инпута
+    }
+
+    function resetGame() {
+        if (confirm("Вы уверены, что хотите удалить сохранение и начать путь с чистого листа?")) {
+            localStorage.removeItem('seregaSave');
+            location.reload();
+        }
+    }
+
+    // --- ЗВУК ---
+    function initAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function playBGM() {
+        if (isAudioPlaying) return;
+        isAudioPlaying = true;
+        const notes = [220.00, 261.63, 329.63, 293.66]; 
+        let noteIndex = 0;
+
+        setInterval(() => {
+            if(!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle'; 
+            osc.frequency.setValueAtTime(notes[noteIndex], audioCtx.currentTime);
+            gain.gain.setValueAtTime(0, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 0.5);
+            gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 2.0);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 2.0);
+            noteIndex = (noteIndex + 1) % notes.length;
+        }, 2000); 
+    }
+
+    function playClickSound() {
+        if(!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(100 + (currentStageIndex * 50), audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+    }
+
+    function playTransitionSound() {
+        if(!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(50, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.8, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 3);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 3);
+    }
+
+    // --- ЛОГИКА ИГРЫ ---
+    function addLog(text, type = 'normal') {
+        const logPanel = document.getElementById('chat-panel');
+        const entry = document.createElement('div');
+        entry.className = `chat-entry ${type}`;
+        entry.innerText = (type === 'system' || type === 'transition' ? "[СИСТЕМА] " : "> ") + text;
+        logPanel.appendChild(entry);
+        if (logPanel.children.length > 7) logPanel.removeChild(logPanel.firstChild);
+        logPanel.scrollTop = logPanel.scrollHeight;
+    }
+
+    function startGame(loadLocal = false) {
+        document.getElementById('start-overlay').style.display = 'none';
+        initAudio();
+        playBGM(); 
+        
+        if (loadLocal && localStorage.getItem('seregaSave')) {
+            const data = JSON.parse(localStorage.getItem('seregaSave'));
+            applySave(data);
+        } else {
+            loadStage(0);
+        }
+        
+        gameInterval = setInterval(gameLoop, 100);
+        
+        // Случайные логи
+        setInterval(() => {
+            if (currentStage && currentStage.logs.length > 0) {
+                const msg = currentStage.logs[Math.floor(Math.random() * currentStage.logs.length)];
+                addLog(msg);
+            }
+        }, 8000);
+
+        // Автосохранение каждые 30 сек
+        setInterval(() => {
+            saveGameLocal();
+            addLog('Автосохранение выполнено.', 'system');
+        }, 30000);
+    }
+
+    function setupStageUI(index) {
+        currentStageIndex = index;
+        currentStage = gameStages[index];
+
+        const statsContainer = document.getElementById('stats-area-container');
+        statsContainer.innerHTML = `
+            <h2 id="stage-name" style="color: var(--stage-color);">${currentStage.name}</h2>
+            <h1 id="score">0</h1>
+            <p id="cps">0 <span id="currency-name">${currentStage.currency}</span>/сек</p>
+            <p style="color: var(--success); font-size: 1rem; margin-top:10px;">Множитель эпохи: x<span id="mult-val">${globalMultiplier}</span></p>
+        `;
+
+        const clickerContainer = document.getElementById('clicker-container');
+        clickerContainer.innerHTML = `
+            <div id="clicker-btn" onclick="clickMain()" style="background-color: ${currentStage.btnColor};">
+                <span id="btn-text-span">${currentStage.btnText}</span>
+            </div>
+        `;
+
+        const upgradesHeader = document.getElementById('upgrades-header-container');
+        upgradesHeader.innerHTML = `<h2 id="upgrades-title">${currentStage.uiTitle}</h2>`;
+
+        document.getElementById('left-panel').style.borderRightColor = currentStage.btnColor;
+    }
+
+    function loadStage(index) {
+        score = 0;
+        baseCps = 0;
+        gameStages[index].upgrades.forEach(u => u.count = 0);
+        
+        setupStageUI(index);
+        addLog(`Началась эпоха: ${currentStage.name}`, 'system');
+        renderUpgrades();
+        updateUI();
+        saveGameLocal(); // Сохраняем прогресс сразу при смене стадии
+    }
+
+    function clickMain() {
+        let clickVal = (currentStageIndex + 1) * 2;
+        score += clickVal * globalMultiplier;
+        playClickSound();
+        updateUI();
+    }
+
+    function getCost(upgrade) {
+        return Math.floor(upgrade.cost * Math.pow(1.15, upgrade.count || 0));
+    }
+
+    function buyUpgrade(idx) {
+        const upg = currentStage.upgrades[idx];
+        const cost = getCost(upg);
+        
+        if (score >= cost) {
+            score -= cost;
+            if (upg.isTransition) {
+                playTransitionSound();
+                addLog(`ЗАВЕРШЕНО: ${upg.name}`, 'transition');
+                
+                if (currentStageIndex === 5) {
+                    clearInterval(gameInterval);
+                    setTimeout(() => {
+                        document.getElementById('end-overlay').style.display = 'flex';
+                    }, 1000);
+                } else {
+                    globalMultiplier += 1; 
+                    setTimeout(() => loadStage(currentStageIndex + 1), 500);
+                }
+            } else {
+                upg.count = (upg.count || 0) + 1;
+                addLog(`Приобретено: ${upg.name}`);
+                calculateCPS();
+                renderUpgrades();
+                updateUI();
+            }
+        }
+    }
+
+    function calculateCPS() {
+        baseCps = 0;
+        currentStage.upgrades.forEach(u => {
+            if (!u.isTransition) baseCps += u.cps * (u.count || 0);
+        });
+    }
+
+    function gameLoop() {
+        if (baseCps > 0) {
+            score += (baseCps * globalMultiplier) / 10;
+        }
+        updateUI();
+    }
+
+    function updateUI() {
+        const scoreEl = document.getElementById('score');
+        const cpsEl = document.getElementById('cps');
+        if (scoreEl) scoreEl.innerText = Math.floor(score).toLocaleString('ru-RU');
+        if (cpsEl) cpsEl.innerText = `${Math.floor(baseCps * globalMultiplier).toLocaleString('ru-RU')} ${currentStage.currency}/сек`;
+        
+        currentStage.upgrades.forEach((u, idx) => {
+            const el = document.getElementById(`upg-${idx}`);
+            if (el) {
+                const cost = getCost(u);
+                const costEl = el.querySelector('.cost-val');
+                if (costEl) costEl.innerText = cost.toLocaleString('ru-RU');
+                
+                if (score >= cost) el.classList.remove('disabled');
+                else el.classList.add('disabled');
+            }
+        });
+    }
+
+    function renderUpgrades() {
+        const container = document.getElementById('upgrades-container');
+        container.innerHTML = '';
+        currentStage.upgrades.forEach((u, idx) => {
+            const cost = getCost(u);
+            const div = document.createElement('div');
+            div.className = `upgrade-card disabled ${u.isTransition ? 'transition-btn' : ''}`;
+            div.id = `upg-${idx}`;
+            div.onclick = () => buyUpgrade(idx);
+            
+            const countStr = u.isTransition ? '' : ` (x${u.count || 0})`;
+            const cpsStr = u.isTransition ? 'КЛЮЧ К СЛЕДУЮЩЕЙ СТАДИИ' : `+${(u.cps * globalMultiplier).toLocaleString('ru-RU')} / сек`;
+            
+            div.innerHTML = `
+                <div class="upgrade-info">
+                    <h3 style="color: ${u.isTransition ? 'var(--danger)' : '#fff'}">${u.name}${countStr}</h3>
+                    <p>${u.desc}</p>
+                    <p style="color:#aaa; font-size:0.8rem; margin-top:5px;">${cpsStr}</p>
+                </div>
+                <div class="upgrade-cost">
+                    <span><span class="cost-val">${cost.toLocaleString('ru-RU')}</span></span>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+</script>
+</body>
+</html>
